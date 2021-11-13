@@ -1,0 +1,91 @@
+<html>
+	<head>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="utf-8">
+		<meta name="author" content="XXXXXXX, Octubre 2021">
+		<script>
+			var foto = null; //por default la foto es nula
+			function get(id)
+			{
+					return document.getElementById(id);
+			}
+			function muestra(elemento)
+			{
+				elemento.style.display = "block";
+			}
+			function oculta(elemento)
+			{
+				elemento.style.display = "none"
+			}
+			function muestra_pantalla(elemento)
+			{
+				oculta(get("menu"));
+				muestra(elemento);
+			}
+			function oculta_pantalla(elemento)
+			{
+				oculta(elemento);
+				muestra(get("menu"));
+			}
+
+			function readSingleFile(files, imagen)
+			{
+					var file = files[0];
+					if(!file) return;
+					var reader = new FileReader();
+					reader.onload = function(e)
+					{
+							imagen.src = reader.result;
+							// reader.result incluyr al principio: "data:image/jpeg;base64"
+							foto = reder.result.split(',')[1];
+					};
+					reader.readAsDataURL(file);
+			}
+			function limpia_alta()
+			{
+				get("alta_email").value = "";
+				get("alta_nombre").value = "";
+				get("alta_apellido_paterno").value = "";
+				get("alta_apellido_materno").value = "";
+				get("alta_fecha_nacimiento").value = "";
+				get("alta_telefono").value = "";
+				get("alta_genero").value = "";
+				get("alta_imagen").src = "/usuario_sin_foto.png";
+			}
+			function alta(){
+					var cliente = new WSClient("/Servicio/rest/ws");
+					var genero = get("alta_genero").value;
+					// da de vuelta el usuario, si el email ya existe regresa error
+					cliente.post("alta_usuario",
+						{
+								usuario:
+								{
+									email: get("alta_email").value,
+									nombre: get("alta_nombre").value,
+									apellido_paterno: get("alta_apellido_paterno").value,
+									apellido_materno: get("alta_apellido_materno").value,
+									fecha_nacimiento: get("alta_fecha_nacimiento").value,
+									telefono: get("alta_telefono").value,
+									genero: genero == "Masculino" ? "M" : genero == "Femenino" ? "F" : null,
+									foto: foto
+								}	
+						},
+						function(code, result)
+						{
+							if(code == 200)
+								alert("El usuario se dio de alta");
+							else
+								alert(JSON.stringfy(result));
+						});
+
+			}
+		</script>
+	
+	</head>
+	<body>
+		<div id="alta_usuario" style="display:none;">
+			<h2> Alta de usuario </h2>
+			
+		</div>
+	</body>
+</html>
