@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprar articulos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src='/WSClient.js'></script>
+
+    <style type="text/css">
+        .row {
+            min-height: 210px;
+            width: 80%;
+            margin: 0 auto;
+            text-align: center;
+            border-style: solid;
+            border-color: black;
+            border-radius: 15px;
+            margin-left: 10%;
+            margin-right: 10%;
+            margin-top: 3%;
+            margin-bottom: 3%;
+        }
+        .row-search{
+            padding: 3%;
+        }
+        .button-search{
+            display: inline-block;
+            margin-left: 3%;
+        }
+        .container {
+            width: 200px;
+            height: 120px;
+            display: inline-block;
+            margin-left: 3%;
+        }
+
+        /* Resize images */
+        .container img {
+            width: 100%;
+            height: auto;
+            margin-top: 7%;
+            margin-bottom: 3%;
+            margin-left: 3%;
+        }
+
+        .btn-aditional{
+            margin-top: 5%;
+            width:190px;
+        }
+
+    </style>
+
+    <script>
+        var foto = null;  // por default la foto es nula
+
+        function get(id)
+        {
+            return document.getElementById(id);
+        }
+        function muestra(elemento)
+        {
+            elemento.style.display = "block";
+        }
+
+        function oculta(elemento)
+        {
+            elemento.style.display = "none";
+        }
+        function muestra_pantalla(elemento)
+        {
+            oculta(get("menu"));
+            muestra(elemento);
+        }
+        function oculta_pantalla(elemento)
+        {
+            oculta(elemento);
+            muestra(get("menu"));
+        }
+
+        function busqueda(descripcion_elem)
+        {
+            var cliente = new WSClient("/Servicio/rest/ws");
+            cliente.post("buscar_articulo",
+            {
+                // se debe pasar como parametro el email del usuario a consultar
+                // si el usuario no existe regresa un error
+                descripcion: descripcion_elem
+            },
+            function(code,result)
+            {
+                if (code == 200)
+                {
+                    for (var i=0; i<result.length; i++) {
+                        foto = result[i].foto;
+                        crearElementSearch(result[i].id_articulo, result[i].nombre, result[i].descripcion, result[i].precio, "data:image/jpeg;base64," + foto);
+                    }
+                    
+                }
+                else
+                    // el objeto "result" es de tipo Error
+                    alert(JSON.stringify(result));
+            });
+        }
+
+        function registrar_compra(id_art, cantidad)
+        {
+            var cliente = new WSClient("/Servicio/rest/ws");
+            // da de alta el usuario, si el email ya existe regresa error
+            cliente.post("comprar_articulo",
+            {
+                articulo:
+                {
+                    id_articulo: id_art, 
+                    cantidad: cantidad.value
+                }
+            },
+            function(code,result)
+            {
+                if (code == 200)
+                    alert("El articulo se agrego al carrito de compras de manera exitosa");
+                else
+                    alert(JSON.stringify(result));
+            });
+        }
+
+        function consulta_carrito()
+        {
+            var cliente = new WSClient("/Servicio/rest/ws");
+            cliente.post("consulta_carrito", { },
+            function(code,result)
+            {
+                if (code == 200)
+                {
+                    for (var i=0; i<result.length; i++) {
+                        foto = result[i].foto;
+                        crearElementCarrito(result[i].id_articulo, result[i].nombre, result[i].descripcion, result[i].precio, result[i].cantidad, "data:image/jpeg;base64," + foto);
+                    }
+                }
+                else
+                    // el objeto "result" es de tipo Error
+                    alert(JSON.stringify(result));
+            });
+        }  
+
+        function prueba(id, elem){
+            alert("IMPRIME ALGO: " + elem.value + ", ID: " + id);
+        }
+
+        function buscar_articulo(articulo_search){
+            var descripcion_search = articulo_search.value;
+            busqueda(descripcion_search);
+            //alert(descripcion_search);
+        }
+
+        function ver_carrito(){
+            oculta(get("div_busqueda"));
+            muestra(get("div_carrito"));
+            //oculta(get("btn_crear_elem"));
+            oculta(get("btn_busqueda"));
+            oculta(get("busqueda_articulo"));
+            muestra(get("btn_volver"));
+            consulta_carrito();
+	    const busqueda = get("div_busqueda");
+ 	    busqueda.innerHTML = '';
+        }
+
+        function ver_busqueda(){
+            muestra(get("div_busqueda"));
+            oculta(get("div_carrito"));
+            //muestra(get("btn_crear_elem"));
+            muestra(get("btn_busqueda"));
+            muestra(get("busqueda_articulo"));
+            oculta(get("btn_volver"));
+	    const carrito = get("div_carrito");
+	    carrito.innerHTML = '';
+        }
+
+        function crearElementSearch(id_elemento, nombre, descripcion, precio, image){
+        
+            //Creamos el nuevo Div del elemento
+            var newDiv = document.createElement("div");
+            newDiv.setAttribute("id", "ID"+id_elemento);
+            newDiv.setAttribute("class", "row");
+
+            //Creamos contenedor de la image
+            var imgDiv = document.createElement("div");
+            imgDiv.setAttribute("class", "container");
+            //Creamos la imagen del producto
+            var img = document.createElement("img");
+            img.setAttribute("src", image);
+            img.setAttribute("alt", "Imagen del producto " + id_elemento);
+            //Agregamos al contenedor de imagen
+            imgDiv.appendChild(img);
+
+            //Creamos contenedor de los datos
+            var datosDiv = document.createElement("div");
+            datosDiv.setAttribute("class", "container");
+            //Creamos nodo de texto del nombre del elemento
+            var nombre_elem = document.createElement("H3");
+            var nombre_text = document.createTextNode(nombre); 
+            nombre_elem.appendChild(nombre_text); 
+            //Creamos nodo de texto del precio del elemento
+            var precio_elem = document.createElement("p");
+            var precio_text = document.createTextNode("$ " + precio);
+            precio_elem.appendChild(precio_text);
+            //Creamos nodo de texto de la descripcion del elemento
+            var descripcion_elem = document.createElement("p");
+            var descripcion_text = document.createTextNode(descripcion);
+            descripcion_elem.appendChild(descripcion_text);
+            //Agregamos al contenedor de datos
+            datosDiv.appendChild(nombre_elem);
+            datosDiv.appendChild(precio_elem);
+            datosDiv.appendChild(descripcion_elem);
+            
+            //Creamos contenedor de compras
+            var compraDiv = document.createElement("div");
+            compraDiv.setAttribute("class", "container");
+            //Creamos el nodo del label de cantidad
+            var cantidad_text = document.createTextNode("Cantidad: ");
+            //Creamos el input de cantidad
+            var cantidad_input = document.createElement("input");
+            cantidad_input.setAttribute("type", "number");
+            cantidad_input.setAttribute("min", "1");
+            cantidad_input.setAttribute("step", "1");
+            cantidad_input.setAttribute("onkeypress", "return event.charCode >= 48 && event.charCode <= 57");
+            cantidad_input.setAttribute("id", "compra_cantidad"+id_elemento);
+            //Creamos el boton de comprar
+            var boton_compra = document.createElement("button");
+            boton_compra.setAttribute("type", "button");
+            boton_compra.setAttribute("id", "compra_boton"+id_elemento);
+            boton_compra.setAttribute("onclick", "registrar_compra('"+id_elemento+"', get('compra_cantidad"+id_elemento+"'))");
+            boton_compra.setAttribute("class", "btn btn-primary btn-aditional");
+            boton_compra.textContent = 'Comprar';
+            //Agregamos al contenedor de compras
+            compraDiv.appendChild(cantidad_text);
+            compraDiv.appendChild(cantidad_input);
+            compraDiv.appendChild(boton_compra);
+
+            //Añadimos los elementos al nuevo div
+            newDiv.appendChild(imgDiv);
+            newDiv.appendChild(datosDiv);
+            newDiv.appendChild(compraDiv);
+
+            // añade el elemento creado y su contenido al DOM
+            var currentDiv = document.getElementById("div_busqueda");
+            currentDiv.appendChild(newDiv)
+        }
+
+        function crearElementCarrito(id_elemento, nombre, descripcion, precio, cantidad, image){
+        
+            //Creamos el nuevo Div del elemento
+            var newDiv = document.createElement("div");
+            newDiv.setAttribute("id", "ID"+id_elemento);
+            newDiv.setAttribute("class", "row");
+
+            //Creamos contenedor de la image
+            var imgDiv = document.createElement("div");
+            imgDiv.setAttribute("class", "container");
+            //Creamos la imagen del producto
+            var img = document.createElement("img");
+            img.setAttribute("src", image);
+            img.setAttribute("alt", "Imagen del producto " + id_elemento);
+            //Agregamos al contenedor de imagen
+            imgDiv.appendChild(img);
+
+            //Creamos contenedor de los datos
+            var datosDiv = document.createElement("div");
+            datosDiv.setAttribute("class", "container");
+            //Creamos nodo de texto del nombre del elemento
+            var nombre_elem = document.createElement("H3");
+            var nombre_text = document.createTextNode(nombre); 
+            nombre_elem.appendChild(nombre_text); 
+            //Creamos nodo de texto del precio del elemento
+            var precio_elem = document.createElement("p");
+            var precio_text = document.createTextNode("$ " + precio);
+            precio_elem.appendChild(precio_text);
+            //Creamos nodo de texto de la descripcion del elemento
+            var descripcion_elem = document.createElement("p");
+            var descripcion_text = document.createTextNode(descripcion);
+            descripcion_elem.appendChild(descripcion_text);
+            //Agregamos al contenedor de datos
+            datosDiv.appendChild(nombre_elem);
+            datosDiv.appendChild(precio_elem);
+            datosDiv.appendChild(descripcion_elem);
+            
+            //Creamos contenedor de compras
+            var compraDiv = document.createElement("div");
+            compraDiv.setAttribute("class", "container");
+            //Creamos el nodo del label de cantidad
+            var cantidad_elem = document.createElement("p");
+            var cantidad_text = document.createTextNode("Cantidad:  " + cantidad);
+            cantidad_elem.appendChild(cantidad_text);
+            //Creamos el nodo de total
+            var total_elem = document.createElement("H3");
+            var total_text = document.createTextNode("Costo total:  " + parseInt(cantidad)*parseInt(precio));
+            total_elem.appendChild(total_text);
+            //Agregamos al contenedor de compras
+            compraDiv.appendChild(cantidad_elem);
+            compraDiv.appendChild(total_elem);
+
+            //Añadimos los elementos al nuevo div
+            newDiv.appendChild(imgDiv);
+            newDiv.appendChild(datosDiv);
+            newDiv.appendChild(compraDiv);
+
+            // añade el elemento creado y su contenido al DOM
+            var currentDiv = document.getElementById("div_carrito");
+            currentDiv.appendChild(newDiv)
+        }
+
+    </script>
+
+    <title>Comprar articulos</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="index.html">SD8 E-Shop</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <a class="nav-item nav-link" href="index.html">Home </a>
+            <a class="nav-item nav-link" href="capturar_articulos.html">Capturar articulo</a>
+            <a class="nav-item nav-link active" href="comprar_articulos.html">Comprar articulos<span class="sr-only">(current)</span></a>
+          </div>
+        </div>
+    </nav>
+      
+    <div class="row-search">
+        <div class="input-group" style="width: 100%;">
+            <input type="search" id="busqueda_articulo" class="form-control rounded" placeholder="Search" aria-label="Search"
+            aria-describedby="search-addon" />
+            <button type="button" id="btn_busqueda" class="btn btn-primary" onclick="buscar_articulo(document.getElementById('busqueda_articulo'))">search</button>
+            <!--<button type="button" id="btn_crear_elem" class="button-search btn btn-primary"  onclick="crearElementSearch(1, 'Nombre', 'Descripcion', '12.00', './images/compras_fondo.jpg')" style="width:200px">Crear elemento</button>-->
+            <button type="button" id="btn_volver" class="button-search btn btn-primary" style="display: none;"  onclick="ver_busqueda()" style="width:200px">Volver</button>
+            <button type="button" id="btn_carrito" class="button-search btn btn-primary"  onclick="ver_carrito()" style="width:200px">Ver carrito de compras</button>
+        </div>
+        
+    </div>
+    
+    <div id="div_busqueda"></div>
+    <div id="div_carrito" style="display: none;"></div>
+
+    <div style="width: 100%; text-align: center;">
+        <button type="button" onclick="location.href = 'index.html'" class="btn btn-primary" style="width:200px; margin-bottom: 20px;">Volver al inicio</button></br>
+        <button type="button" onclick="location.href = 'comprar_articulos.html'" class="btn btn-primary" style="width:200px; margin-bottom: 20px;">Buscar articulos</button></br>    
+    </div>
+    
+</body>
+</html>

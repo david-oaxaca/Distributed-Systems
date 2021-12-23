@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="utf-8">
+		<meta name="author" content="Carlos Pineda Guerrero, Octubre 2021">
+		<title>Comprar articulos</title>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+ 		<script src='/WSClient.js'></script>
+		<script>
+			var foto = null;  // por default la foto es nula
+			function get(id)
+			{
+				return document.getElementById(id);
+			}
+			function muestra(elemento)
+			{
+				elemento.style.display = "block";
+			}
+
+			function oculta(elemento)
+			{
+				elemento.style.display = "none";
+			}
+		
+			function readSingleFile(files,imagen)
+			{
+				var file = files[0];
+				if (!file) return;
+				var reader = new FileReader();
+				reader.onload = function(e)
+				{
+					imagen.src = reader.result;
+					// reader.result incluye al principio: "data:image/jpeg;base64,"
+					foto = reader.result.split(',')[1];
+				};
+				reader.readAsDataURL(file);
+			}
+
+			function limpia_captura()
+			{
+                                get("captura_nombre").value = "";
+				get("captura_descripcion").value = "";
+				get("captura_precio").value = "";
+				get("captura_cantidad_almacen").value = "";
+				get("captura_imagen").src = "./images/compras_fondo.jpg";
+			}
+
+			function captura()
+			{
+				var cliente = new WSClient("/Servicio/rest/ws");
+				// da de alta el usuario, si el email ya existe regresa error
+				cliente.post("registrar_articulo",
+				{
+				        articulo:
+					{
+					        nombre: get("captura_nombre").value,
+						descripcion: get("captura_descripcion").value,
+						precio: get("captura_precio").value,
+						cantidad: get("captura_cantidad_almacen").value,
+						foto: foto
+					}
+				},
+				function(code,result)
+				{
+					if (code === 200) {
+                        			alert("Articulo dado de alta");
+                    			} else {
+                        			alert("Error-captura " + JSON.stringify(result));
+                   			 }
+				});
+			}         
+                       
+		</script>
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<a class="navbar-brand" href="index.html">SD8 E-Shop</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+			  <span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+			  <div class="navbar-nav">
+				<a class="nav-item nav-link" href="index.html">Home </a>
+				<a class="nav-item nav-link active" href="capturar_articulos.html">Capturar articulo<span class="sr-only">(current)</span></a>
+				<a class="nav-item nav-link" href="comprar_articulos.html">Comprar articulos</a>
+			  </div>
+			</div>
+		</nav>
+		<div id="alta_usuario" style="display:block; text-align: center; padding-left: 10%; padding-right: 10%;">
+			<h2>Captura de articulo</h2>
+			Nombre *<br>
+			<input type="text" id="captura_nombre" class="form-control rounded" value=""/><br>
+			Descripcion *<br>
+			<input type="text" id="captura_descripcion" class="form-control rounded" value=""/><br>
+			Precio *<br>
+			<input type="number" id="captura_precio" class="form-control rounded" value=""/><br>
+			Cantidad en almacen *<br>
+			<input type="number" 
+            min="1"
+            step="1"
+            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+            id="captura_cantidad_almacen" class="form-control rounded" value=""/><br>
+			<br>
+			<br>
+			<img id="captura_imagen" width="100px" src="./images/compras_fondo.jpg"></img><br>
+			<input type="file" onchange="readSingleFile(files,get('captura_imagen'))" multiple="false" accept="image/*"/><br>
+			<br>
+			<button type="button" onclick="captura()" class="btn btn-primary" style="width:200px; margin-bottom: 20px;">Capturar articulo</button></br>
+            <button type="button" onclick="limpia_captura()" class="btn btn-primary" style="width:200px; margin-bottom: 20px;">Limpiar datos</button></br>
+			<button type="button" onclick="location.href = 'index.html'" class="btn btn-primary" style="width:200px; margin-bottom: 20px;">Volver al inicio</button></br>
+			<button type="button" onclick="location.href = 'comprar_articulos.html'" class="btn btn-primary" style="width:200px; margin-bottom: 20px;">Buscar articulos</button></br>
+		</div>
+
+	</body>
+</html>
